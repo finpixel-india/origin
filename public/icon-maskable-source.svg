@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0a10"/>
+      <stop offset="1" stop-color="#020204"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="256" cy="256" r="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7c6cc4" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#7c6cc4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mark" x1="256" y1="140" x2="256" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2b2b3a"/>
+      <stop offset="1" stop-color="#101017"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full-bleed background for maskable (Android will clip a circle/rounded shape) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="170" fill="url(#glow)"/>
+
+  <!-- Mark scaled smaller so it fits inside the ~80% safe zone -->
+  <g transform="translate(256 256) scale(6.2) translate(-24 -24)">
+    <path d="M14 17 L20 5 L24 14 L28 5 L34 17 L40 30 L24 44 L8 30 Z"
+          fill="url(#mark)"
+          stroke="rgba(206,206,216,0.5)"
+          stroke-width="0.55"
+          stroke-linejoin="round"/>
+    <g stroke="rgba(206,206,216,0.55)" stroke-width="0.5"
+       stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M24 14 L24 19"/>
+      <path d="M16 22 L24 40 L32 22"/>
+      <path d="M18 25 L23 23"/>
+      <path d="M30 25 L25 23"/>
+      <path d="M14 17 L24 19 L34 17"/>
+    </g>
+    <path d="M24 18 L26.6 21 L24 24 L21.4 21 Z" fill="#9788db"/>
+  </g>
+</svg>
