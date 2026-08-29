@@ -30,6 +30,7 @@ type AuthValue = {
   lastSyncedAt: number | null;
   login: (username: string, password: string) => Promise<AuthResult>;
   register: (username: string, password: string) => Promise<AuthResult>;
+  updateUser: (patch: Partial<AuthUser>) => void;
   syncNow: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
 };
@@ -264,9 +265,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLastSyncedAt(null);
   }, [pushNow]);
 
+  const updateUser = useCallback((patch: Partial<AuthUser>) => {
+    setUser((prev) => (prev ? { ...prev, ...patch } : null));
+  }, []);
+
   const value = useMemo<AuthValue>(
-    () => ({ loading, configured: true, user, sync, lastSyncedAt, login, register, syncNow, signOut }),
-    [loading, user, sync, lastSyncedAt, login, register, syncNow, signOut]
+    () => ({ loading, configured: true, user, sync, lastSyncedAt, login, register, updateUser, syncNow, signOut }),
+    [loading, user, sync, lastSyncedAt, login, register, updateUser, syncNow, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

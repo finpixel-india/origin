@@ -234,7 +234,7 @@ export default function SettingsPage() {
     resetAll,
   } = useStore();
 
-  const { loading: authLoading, user, sync, lastSyncedAt, syncNow, signOut } = useAuth();
+  const { loading: authLoading, user, sync, lastSyncedAt, syncNow, signOut, updateUser } = useAuth();
 
   const [confirmReset, setConfirmReset] = useState(false);
   const [manualSyncError, setManualSyncError] = useState<string | null>(null);
@@ -242,6 +242,7 @@ export default function SettingsPage() {
   const [newHabitEmoji, setNewHabitEmoji] = useState("🎯");
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const picInputRef = useRef<HTMLInputElement | null>(null);
 
   // Read the ?auth= result from the OAuth redirect, then clean the URL.
   useEffect(() => {
@@ -304,6 +305,44 @@ export default function SettingsPage() {
     reader.readAsText(file);
   };
 
+  const handleProfilePicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const MAX = 200;
+        let w = img.width;
+        let h = img.height;
+        if (w > h) {
+          if (w > MAX) { h *= MAX / w; w = MAX; }
+        } else {
+          if (h > MAX) { w *= MAX / h; h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        ctx?.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        
+        updateUser({ picture: dataUrl });
+
+        try {
+          await fetch("/api/auth/profile", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ picture: dataUrl })
+          });
+        } catch {}
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   const activeHabits = habits.filter((h) => !h.archived);
 
   return (
@@ -332,14 +371,32 @@ export default function SettingsPage() {
           ) : user ? (
             <div className="mt-4">
               <div className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5">
-                {user.picture ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.picture} alt="" className="h-10 w-10 rounded-full border border-white/10" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5 font-serif text-lg text-silver-200">
-                    {(user.name || user.username || "?").charAt(0).toUpperCase()}
+                <button 
+                  onClick={() => picInputRef.current?.click()}
+                  title="Upload profile picture"
+                  className="group relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-white/5 transition hover:border-white/20"
+                >
+                  {user.picture ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.picture} alt="" className="h-full w-full object-cover transition duration-300 group-hover:opacity-50" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="font-serif text-lg text-silver-200 transition duration-300 group-hover:opacity-0">
+                      {(user.name || user.username || "?").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
                   </div>
-                )}
+                </button>
+                <input
+                  ref={picInputRef}
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  className="hidden"
+                  onChange={handleProfilePicUpload}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-silver-100">{user.name || user.username || "Signed in"}</p>
                   <p className="truncate text-xs text-silver-500">{user.username ? `ID: ${user.username}` : user.email}</p>

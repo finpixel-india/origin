@@ -5,6 +5,7 @@ import { StoreProvider } from "@/lib/store/StoreProvider";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
 import { AppShell } from "@/components/AppShell";
 import { PWARegister } from "@/components/PWARegister";
+import { FloatingControls } from "@/components/FloatingControls";
 
 export const metadata: Metadata = {
   title: {
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <StoreProvider>
           <AuthProvider>
             <AppShell>{children}</AppShell>
+            <FloatingControls />
           </AuthProvider>
         </StoreProvider>
         <PWARegister />
