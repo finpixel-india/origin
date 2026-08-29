@@ -194,6 +194,7 @@
 .page-enter,
 .animate-page {
   animation: pageIn 180ms ease-out both;
+  will-change: opacity;
 }
 
 /* Global smoothness: unify easing for interactive elements */

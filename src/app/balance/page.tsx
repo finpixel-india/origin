@@ -9,7 +9,7 @@ import {
   type AssetTx,
   type AssetTxKind,
 } from "@/lib/store";
-import { GlassCard, SectionLabel } from "@/components/ui";
+import { GlassCard, Ring, SectionLabel } from "@/components/ui";
 import { uid } from "@/lib/id";
 import { formatMoney, maskMoney } from "@/lib/format";
 import { formatMedium, formatShort, todayKey, parseKey } from "@/lib/date";
@@ -55,6 +55,7 @@ export default function AssetPage() {
   const total = balanceTotal(balance);
 
   const [baseDraft, setBaseDraft] = useState<string | null>(null);
+  const [goalDraft, setGoalDraft] = useState<string | null>(null);
   const [kind, setKind] = useState<AssetTxKind>("spending");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -101,6 +102,15 @@ export default function AssetPage() {
       lastUpdated: new Date().toISOString(),
     }));
     setBaseDraft(null);
+  };
+
+  const commitGoal = (value: string) => {
+    const n = Number(value);
+    setBalance((b) => ({
+      ...b,
+      savingsGoal: Number.isFinite(n) && n > 0 ? n : undefined,
+    }));
+    setGoalDraft(null);
   };
 
   const addTx = (e: React.FormEvent) => {
@@ -180,6 +190,9 @@ export default function AssetPage() {
   const growth = total - base;
   const growthPct = base !== 0 ? (growth / Math.abs(base)) * 100 : 0;
   const peak = series.length ? Math.max(...series.map((p) => p.value)) : base;
+
+  const goal = balance.savingsGoal;
+  const goalPct = goal && goal > 0 ? Math.min(100, Math.round((total / goal) * 100)) : null;
 
   return (
     <div className="mx-auto w-full max-w-5xl">
@@ -402,6 +415,56 @@ export default function AssetPage() {
                 }`}
               >
                 {net >= 0 ? "+" : "−"}{money(Math.abs(net))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Savings goal ── */}
+          <div className="mt-6 glass-soft rounded-xl p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-5">
+                {goalPct !== null && (
+                  <Ring value={goalPct} size={80} stroke={7}>
+                    <div className="text-center">
+                      <div className="font-serif text-lg leading-none text-silver-100">{goalPct}%</div>
+                      <div className="mt-0.5 text-[0.5rem] uppercase tracking-widest text-silver-600">of goal</div>
+                    </div>
+                  </Ring>
+                )}
+                <div className="min-w-0">
+                  <div className="text-[0.62rem] font-medium uppercase tracking-[0.18em] text-silver-500">
+                    Savings goal
+                  </div>
+                  {goal && !hidden ? (
+                    <div className="mt-1 font-serif text-2xl text-silver-100">{money(goal)}</div>
+                  ) : !goal ? (
+                    <p className="mt-1 text-sm text-silver-500">Set a target to track your progress.</p>
+                  ) : (
+                    <div className="mt-1 font-serif text-2xl tracking-widest text-silver-300">••••••</div>
+                  )}
+                </div>
+              </div>
+              <div className="w-full sm:w-44">
+                <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 transition-all duration-300 focus-within:border-amethyst-400/50 focus-within:ring-2 focus-within:ring-amethyst-500/15">
+                  <span className="text-silver-400">{sym}</span>
+                  {hidden ? (
+                    <span className="w-full text-right font-serif text-lg tracking-widest text-silver-300">••••••</span>
+                  ) : (
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={goalDraft ?? String(goal ?? "")}
+                      onChange={(e) => setGoalDraft(e.target.value)}
+                      onBlur={(e) => commitGoal(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                      }}
+                      placeholder="e.g. 100000"
+                      className="w-full bg-transparent text-right font-serif text-lg text-silver-100 outline-none placeholder:text-silver-700"
+                    />
+                  )}
+                </div>
+                <p className="mt-1.5 text-[0.62rem] text-silver-600">Your savings target.</p>
               </div>
             </div>
           </div>

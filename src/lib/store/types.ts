@@ -77,6 +77,7 @@ export type Balance = {
   /** Earnings / spendings applied on top of the base amount. */
   transactions?: AssetTx[];
   lastUpdated?: string;
+  savingsGoal?: number;
 };
 
 export type FocusItem = {

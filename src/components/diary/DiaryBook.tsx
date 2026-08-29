@@ -279,7 +279,7 @@ export function DiaryBook({
   // flex space and the width follows the aspect ratio, so the book always fits
   // inside the viewport and the page never needs to scroll.
   const spreadStyle: React.CSSProperties = isMobile
-    ? { minHeight: "78vh", width: "100%", transformStyle: "preserve-3d" }
+    ? { height: "calc(100dvh - 13rem)", minHeight: "450px", width: "100%", transformStyle: "preserve-3d" }
     : {
         // Height comes from the leftover flex space; width follows the ratio.
         // A WIDER ratio therefore means a physically larger book.

@@ -12,13 +12,17 @@ function SnowEffect() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const dpr = window.devicePixelRatio || 1;
     let width = window.innerWidth;
     let height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+    ctx.scale(dpr, dpr);
 
     const flakes: { x: number; y: number; r: number; d: number }[] = [];
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 60; i++) {
       flakes.push({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -34,18 +38,18 @@ function SnowEffect() {
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
       ctx.beginPath();
-      
+
       angle += 0.01;
       for (let i = 0; i < flakes.length; i++) {
         const f = flakes[i];
         ctx.moveTo(f.x, f.y);
         ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2, true);
-        
+
         f.y += Math.pow(f.d, 2) + 0.5;
         f.x += Math.sin(angle) * 1.5;
-        
+
         if (f.y > height) {
-          flakes[i] = { x: Math.random() * width, y: 0, r: f.r, d: f.d };
+          flakes[i] = { x: Math.random() * width, y: -5, r: f.r, d: f.d };
         }
       }
       ctx.fill();
@@ -54,16 +58,24 @@ function SnowEffect() {
 
     render();
 
+    let resizeTimer: ReturnType<typeof setTimeout>;
     const onResize = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }, 150);
     };
     window.addEventListener("resize", onResize);
 
     return () => {
       cancelAnimationFrame(animationId);
+      clearTimeout(resizeTimer);
       window.removeEventListener("resize", onResize);
     };
   }, []);

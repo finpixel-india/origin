@@ -10,6 +10,7 @@ import {
   GlassCard,
   Modal,
   Progress,
+  Ring,
   SectionLabel,
   TextArea,
   TextInput,
@@ -234,12 +235,14 @@ export default function BucketPage() {
                   <p className="mt-1.5 line-clamp-2 text-sm text-silver-500">{item.description}</p>
                 )}
 
-                <div className="mt-4">
-                  <div className="mb-1.5 flex items-center justify-between text-[0.66rem] text-silver-500">
-                    <span>Progress</span>
-                    <span className="font-medium text-silver-300">{item.progress}%</span>
+                <div className="mt-4 flex items-center gap-3">
+                  <Ring value={item.progress} size={48} stroke={5} tone={done ? "emerald" : "amethyst"}>
+                    <span className="text-[0.62rem] font-medium text-silver-200">{item.progress}%</span>
+                  </Ring>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[0.66rem] text-silver-500">Progress</div>
+                    <Progress value={item.progress} className="mt-1 h-1" tone={done ? "silver" : "amethyst"} />
                   </div>
-                  <Progress value={item.progress} />
                 </div>
 
                 {item.targetDate && (

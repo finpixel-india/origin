@@ -6,7 +6,7 @@ import { useStore, habitStats, computeStreak, balanceTotal } from "@/lib/store";
 import { greetingFor, timeFor, formatLong, todayKey, formatShort } from "@/lib/date";
 import { motivationFor } from "@/lib/motivational";
 import { formatMoney, maskMoney } from "@/lib/format";
-import { Badge, GlassCard, Progress, SectionLabel, badgeTone } from "@/components/ui";
+import { Badge, GlassCard, Progress, Ring, SectionLabel, badgeTone } from "@/components/ui";
 import { uid } from "@/lib/id";
 
 function EmptyPrompt({ title, detail }: { title: string; detail: string }) {
@@ -122,12 +122,12 @@ export default function HomePage() {
             </div>
             {hasHabitData ? (
               <div className="mt-5 flex flex-1 items-center gap-5">
-                <div className="grid h-[84px] w-[84px] shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.03]">
+                <Ring value={stats.pct} size={84} stroke={7}>
                   <div className="text-center">
                     <div className="font-serif text-2xl text-silver-100">{stats.pct}%</div>
                     <div className="text-[0.58rem] uppercase tracking-widest text-silver-600">done</div>
                   </div>
-                </div>
+                </Ring>
                 <div className="min-w-0 flex-1">
                   <div className="font-serif text-3xl text-silver-100">
                     {stats.done}<span className="text-silver-600">/{stats.total}</span>
@@ -228,18 +228,26 @@ export default function HomePage() {
             </div>
             {hasBucketData && bucketStats.overall !== null ? (
               <>
-                <div className="mt-3 flex items-end gap-3">
-                  <span className="font-serif text-4xl text-silver-50">{bucketStats.overall}%</span>
-                  <span className="pb-1 text-xs text-silver-600">average progress</span>
-                </div>
-                <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
-                  <div className="glass-soft rounded-lg px-3 py-2.5">
-                    <div className="font-serif text-xl text-silver-100">{bucketStats.completed}</div>
-                    <div className="text-[0.62rem] uppercase tracking-widest text-silver-600">Completed</div>
-                  </div>
-                  <div className="glass-soft rounded-lg px-3 py-2.5">
-                    <div className="font-serif text-xl text-silver-100">{bucketStats.inProgress}</div>
-                    <div className="text-[0.62rem] uppercase tracking-widest text-silver-600">In progress</div>
+                <div className="mt-3 flex items-center gap-4">
+                  <Ring value={bucketStats.overall ?? 0} size={72} stroke={6}>
+                    <div className="text-center">
+                      <div className="font-serif text-lg leading-none text-silver-100">{bucketStats.overall}%</div>
+                      <div className="mt-0.5 text-[0.5rem] uppercase tracking-widest text-silver-600">avg</div>
+                    </div>
+                  </Ring>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <div className="glass-soft rounded-lg px-3 py-2">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-[0.62rem] uppercase tracking-widest text-silver-600">Completed</span>
+                        <span className="font-serif text-lg text-silver-100">{bucketStats.completed}</span>
+                      </div>
+                    </div>
+                    <div className="glass-soft rounded-lg px-3 py-2">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-[0.62rem] uppercase tracking-widest text-silver-600">In progress</span>
+                        <span className="font-serif text-lg text-silver-100">{bucketStats.inProgress}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>

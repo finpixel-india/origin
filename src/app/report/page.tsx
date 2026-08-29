@@ -1,9 +1,64 @@
 "use client";
 
 import { useMemo } from "react";
-import { useStore, habitStreak, habitTotalCompletions, dailySeries, computeStreak } from "@/lib/store";
+import { useStore, habitStreak, habitTotalCompletions, dailySeries, computeStreak, type Entries, type Habit } from "@/lib/store";
 import { GlassCard, SectionLabel } from "@/components/ui";
-import { todayKey, formatShort, relativeDay } from "@/lib/date";
+import { todayKey, formatShort, relativeDay, addDaysKey, parseKey } from "@/lib/date";
+
+/** Build 365-day heatmap data: weeks × days grid with completion ratios. */
+function buildHeatmap(
+  entries: Record<string, { completions: Record<string, boolean> }>,
+  habits: { id: string; archived?: boolean }[],
+  today: string
+): { date: string; ratio: number }[][] {
+  const active = habits.filter((h) => !h.archived);
+  const total = active.length;
+  const weeks: { date: string; ratio: number }[][] = [];
+  // Walk back 364 days (52 full weeks + today's partial week)
+  const startOffset = 364;
+  const startDate = addDaysKey(today, -startOffset);
+  const startDow = parseKey(startDate).getDay(); // 0=Sun
+  let cursor = addDaysKey(startDate, -startDow); // align to Sunday
+  const endDate = today;
+
+  let week: { date: string; ratio: number }[] = [];
+  while (cursor <= endDate || week.length % 7 !== 0) {
+    const e = entries[cursor];
+    const done = total > 0 && e ? active.filter((h) => e.completions[h.id]).length : 0;
+    const ratio = total > 0 ? done / total : 0;
+    const isFuture = cursor > today;
+    week.push({ date: cursor, ratio: isFuture ? -1 : ratio });
+    if (week.length === 7) {
+      weeks.push(week);
+      week = [];
+    }
+    cursor = addDaysKey(cursor, 1);
+  }
+  if (week.length > 0) weeks.push(week);
+  return weeks;
+}
+
+const HEATMAP_COLORS = [
+  "rgba(255,255,255,0.04)",  // 0: no activity
+  "#2d2350",                  // 1-25%
+  "#3b2d6b",                  // 26-50%
+  "#6353a8",                  // 51-75%
+  "#9788db",                  // 76-99%
+  "#cfc6f5",                  // 100%
+];
+
+function heatColor(ratio: number): string {
+  if (ratio < 0) return "transparent"; // future
+  if (ratio === 0) return HEATMAP_COLORS[0];
+  if (ratio <= 0.25) return HEATMAP_COLORS[1];
+  if (ratio <= 0.5) return HEATMAP_COLORS[2];
+  if (ratio <= 0.75) return HEATMAP_COLORS[3];
+  if (ratio < 1) return HEATMAP_COLORS[4];
+  return HEATMAP_COLORS[5];
+}
+
+const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY_LABELS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 export default function ReportPage() {
   const { habits, entries } = useStore();
@@ -22,6 +77,8 @@ export default function ReportPage() {
       })),
     [activeHabits, entries, today]
   );
+
+  const heatmap = useMemo(() => buildHeatmap(entries, habits, today), [entries, habits, today]);
 
   const totalDaysTracked = useMemo(
     () => Object.keys(entries).filter((k) => Object.keys(entries[k]?.completions ?? {}).length > 0).length,
@@ -134,6 +191,70 @@ export default function ReportPage() {
             <div className="mt-2 flex justify-between text-[0.6rem] uppercase tracking-widest text-silver-700">
               <span>{relativeDay(series[0]?.date ?? today)}</span>
               <span>Today</span>
+            </div>
+          </div>
+        )}
+      </GlassCard>
+
+      {/* Activity heatmap */}
+      <GlassCard className="mt-5 p-6">
+        <div className="flex items-center justify-between">
+          <SectionLabel>Activity — past year</SectionLabel>
+          <div className="flex items-center gap-2 text-[0.58rem] text-silver-600">
+            <span>Less</span>
+            {HEATMAP_COLORS.slice(0, 6).map((c, i) => (
+              <span
+                key={i}
+                className="inline-block h-[10px] w-[10px] rounded-[2px]"
+                style={{ background: c }}
+              />
+            ))}
+            <span>More</span>
+          </div>
+        </div>
+
+        {activeHabits.length === 0 ? (
+          <p className="mt-8 rounded-xl border border-dashed border-white/10 px-6 py-10 text-center font-serif text-lg italic text-silver-500">
+            Add habits in Settings to see your activity heatmap.
+          </p>
+        ) : (
+          <div className="mt-5 overflow-x-auto">
+            <div className="inline-flex gap-[3px]" style={{ minWidth: "max-content" }}>
+              {/* Day labels column */}
+              <div className="flex flex-col gap-[3px] pr-1 pt-[18px]">
+                {DAY_LABELS.map((d, i) => (
+                  <span
+                    key={d}
+                    className="flex h-[11px] items-center text-[9px] leading-none text-silver-700"
+                    style={{ visibility: i % 2 === 1 ? "visible" : "hidden" }}
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
+              {/* Weeks grid */}
+              {heatmap.map((week, wi) => {
+                // Month label: show if this week contains the 1st of a month
+                const monthStart = week.find((d) => d.date.endsWith("-01"));
+                const monthLabel = monthStart
+                  ? MONTH_LABELS[parseInt(monthStart.date.split("-")[1], 10) - 1]
+                  : null;
+                return (
+                  <div key={wi} className="flex flex-col gap-[3px]">
+                    <span className="flex h-[14px] items-end text-[9px] leading-none text-silver-600">
+                      {monthLabel ?? ""}
+                    </span>
+                    {week.map((day) => (
+                      <span
+                        key={day.date}
+                        title={day.ratio >= 0 ? `${day.date}: ${Math.round(day.ratio * 100)}%` : ""}
+                        className="h-[11px] w-[11px] rounded-[2px] transition-colors duration-200"
+                        style={{ background: heatColor(day.ratio) }}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

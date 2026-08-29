@@ -6,6 +6,7 @@ import { AuthProvider } from "@/lib/auth/AuthProvider";
 import { AppShell } from "@/components/AppShell";
 import { PWARegister } from "@/components/PWARegister";
 import { FloatingControls } from "@/components/FloatingControls";
+import { DynamicBg } from "@/components/DynamicBg";
 
 export const metadata: Metadata = {
   title: {
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="bg-black text-silver-200 font-sans antialiased">
+        <DynamicBg />
         <StoreProvider>
           <AuthProvider>
             <AppShell>{children}</AppShell>

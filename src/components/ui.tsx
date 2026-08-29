@@ -6,6 +6,7 @@ import {
   ReactNode,
   TextareaHTMLAttributes,
   useEffect,
+  useId,
 } from "react";
 
 export function GlassCard({
@@ -62,17 +63,25 @@ export function Ring({
   value,
   size = 116,
   stroke = 9,
+  tone = "amethyst",
   children,
 }: {
   value: number;
   size?: number;
   stroke?: number;
+  tone?: "amethyst" | "emerald";
   children?: ReactNode;
 }) {
+  const gradId = useId();
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(100, value));
   const offset = c - (pct / 100) * c;
+  
+  const stops = tone === "emerald" 
+    ? { start: "#2d8a6e", end: "#6ee7b7" }
+    : { start: "#6353a8", end: "#b3a6ea" };
+
   return (
     <div className="relative inline-grid place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -89,7 +98,7 @@ export function Ring({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="url(#ringGrad)"
+          stroke={`url(#${gradId})`}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={c}
@@ -97,9 +106,9 @@ export function Ring({
           style={{ transition: "stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1)" }}
         />
         <defs>
-          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#6353a8" />
-            <stop offset="1" stopColor="#b3a6ea" />
+          <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={stops.start} />
+            <stop offset="1" stopColor={stops.end} />
           </linearGradient>
         </defs>
       </svg>
