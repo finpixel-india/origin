@@ -152,7 +152,7 @@ export function FloatingControls() {
 
     let active = true;
     setLoadingMusic(true);
-    fetchSongUrl("All stars closer").then((url) => {
+    fetchSongUrl("All the Stars Kendrick Lamar SZA").then((url) => {
       if (!active) return;
       setLoadingMusic(false);
       if (url) {
